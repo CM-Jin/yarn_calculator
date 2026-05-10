@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>대체실 소요량 계산기</title>
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --card: #fffaf4;
+      --card-2: #ffffff;
+      --ink: #2b2723;
+      --muted: #766f67;
+      --line: #eadfd2;
+      --accent: #8d6e63;
+      --accent-dark: #6d4c41;
+      --soft: #efe3d7;
+      --danger: #9a4b3f;
+      --good: #4f6f52;
+      --shadow: 0 18px 40px rgba(72, 54, 40, 0.12);
+      --radius: 22px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(141, 110, 99, 0.16), transparent 32rem),
+        linear-gradient(180deg, #fbf7f1 0%, var(--bg) 55%, #f4ede4 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    header {
+      padding: 18px 4px 20px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(141, 110, 99, 0.11);
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(28px, 5vw, 46px);
+      line-height: 1.06;
+      letter-spacing: -0.055em;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.68;
+      max-width: 780px;
+      word-break: keep-all;
+    }
+
+    .top-warning {
+      margin: 14px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 13px;
+      border-radius: 14px;
+      background: rgba(154, 75, 63, 0.08);
+      border: 1px solid rgba(154, 75, 63, 0.18);
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 250, 244, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-inner {
+      padding: 18px;
+    }
+
+    .section {
+      background: var(--card-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.04em;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      margin: 0 0 7px;
+      letter-spacing: -0.025em;
+    }
+
+    .label-note {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #ded0c1;
+      border-radius: var(--radius-sm);
+      background: #fffdf9;
+      color: var(--ink);
+      padding: 11px 12px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(141, 110, 99, 0.13);
+      background: #ffffff;
+    }
+
+    input::placeholder {
+      color: #b0a59a;
+    }
+
+    .inline-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .unit-note {
+      margin-top: 7px;
+      min-height: 18px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid #dccbbc;
+      background: #fffdf9;
+      color: var(--accent-dark);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+      user-select: none;
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .chip.active {
+      background: var(--accent-dark);
+      color: white;
+      border-color: var(--accent-dark);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 15px;
+      min-height: 48px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      letter-spacing: -0.03em;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.99);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .primary {
+      background: var(--accent-dark);
+      color: #fff;
+    }
+
+    .secondary {
+      background: var(--soft);
+      color: var(--accent-dark);
+    }
+
+    .ghost {
+      background: transparent;
+      color: var(--accent-dark);
+      border: 1px solid #d8c6b5;
+    }
+
+    .result-panel {
+      position: sticky;
+      top: 14px;
+    }
+
+    .result-head {
+      padding: 18px 18px 0;
+    }
+
+    .result-head h2 {
+      font-size: 20px;
+    }
+
+    .main-number {
+      margin: 16px 0 8px;
+      background: linear-gradient(145deg, #7a584d, #5d4037);
+      color: white;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 14px 28px rgba(93, 64, 55, 0.2);
+    }
+
+    .main-label {
+      font-size: 13px;
+      opacity: 0.82;
+      font-weight: 800;
+    }
+
+    .main-value {
+      margin-top: 6px;
+      font-size: clamp(32px, 7vw, 48px);
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .main-sub {
+      margin-top: 7px;
+      font-size: 13px;
+      opacity: 0.86;
+      line-height: 1.45;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: baseline;
+      padding: 12px;
+      border-radius: 16px;
+      background: #fffdf9;
+      border: 1px solid var(--line);
+    }
+
+    .stat b {
+      font-size: 18px;
+      letter-spacing: -0.04em;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .notice {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(141, 110, 99, 0.1);
+      border: 1px solid rgba(141, 110, 99, 0.18);
+      color: var(--accent-dark);
+      font-size: 13px;
+      line-height: 1.58;
+      word-break: keep-all;
+    }
+
+    .notice.warn {
+      background: rgba(154, 75, 63, 0.08);
+      border-color: rgba(154, 75, 63, 0.16);
+      color: var(--danger);
+    }
+
+    .formula {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #f8f0e7;
+      color: #62564d;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(20px);
+      background: #2b2723;
+      color: white;
+      padding: 11px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    footer {
+      margin: 24px 4px 0;
+      padding: 18px 4px 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .small-muted {
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.58;
+    }
+
+    .error-list {
+      display: none;
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(154, 75, 63, 0.08);
+      border: 1px solid rgba(154, 75, 63, 0.18);
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .error-list.show {
+      display: block;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .result-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        padding: 18px 12px 32px;
+      }
+
+      header {
+        padding-top: 8px;
+      }
+
+      .panel-inner {
+        padding: 12px;
+      }
+
+      .section {
+        padding: 14px;
+      }
+
+      .grid,
+      .grid.three,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .inline-pair {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      input,
+      select {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">🧶 substitute yarn calculator</div>
+      <h1>대체실 소요량 계산기</h1>
+      <p class="lead">
+        원작 사용량과 대체실 길이, 게이지 차이를 함께 반영해 대체실 필요량을 계산합니다.
+      </p>
+      <div class="top-warning">*본인의 손땀에 따라 실제 소요량은 달라질 수 있습니다.</div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="section">
+            <div class="section-title">
+              <h2>원작실 정보</h2>
+              <span class="hint">실 라벨 기준</span>
+            </div>
+
+            <div class="grid">
+              <div class="field">
+                <label for="originalUnitG">원작실 단위 g</label>
+                <input id="originalUnitG" type="number" inputmode="decimal" min="0" step="0.1" placeholder="예: 100">
+              </div>
+              <div class="field">
+                <label for="originalUnitM">원작실 단위 m</label>
+                <input id="originalUnitM" type="number" inputmode="decimal" min="0" step="0.1" placeholder="예: 300">
+              </div>
+            </div>
+            <div id="originalMpg" class="unit-note">원작실 1g당 m가 여기에 표시됩니다.</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">
+              <h2>원작 도안 사용량</h2>
+              <span class="hint">g 또는 m 입력</span>
+            </div>
+
+            <div class="grid">
+              <div class="field">
+                <label for="originalUsage">원작 사용량</label>
+                <input id="originalUsage" type="number" inputmode="decimal" min="0" step="0.1" placeholder="예: 500">
+              </div>
+              <div class="field">
+                <label for="originalUsageUnit">사용량 단위</label>
+                <select id="originalUsageUnit">
+                  <option value="g">g</option>
+                  <option value="m">m</option>
+                </select>
+              </div>
+            </div>
+            <p class="small-muted">
+              도안에 “총 1500m”처럼 적혀 있으면 m로 넣고, “500g 사용”처럼 적혀 있으면 g로 넣으면 됩니다.
+            </p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">
+              <h2>대체실 정보</h2>
+              <span class="hint">구매 단위 기준</span>
+            </div>
+
+            <div class="grid">
+              <div class="field">
+                <label for="subUnitG">대체실 단위 g</label>
+                <input id="subUnitG" type="number" inputmode="decimal" min="0" step="0.1" placeholder="예: 100">
+              </div>
+              <div class="field">
+                <label for="subUnitM">대체실 단위 m</label>
+                <input id="subUnitM" type="number" inputmode="decimal" min="0" step="0.1" placeholder="예: 450">
+              </div>
+            </div>
+            <div id="subMpg" class="unit-note">대체실 1g당 m가 여기에 표시됩니다.</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">
+              <h2>게이지</h2>
+              <span class="hint">메리야스 기준 · 세탁·블로킹 후 기준 권장</span>
+            </div>
+
+            <div class="grid">
+              <div>
+                <label>원작 게이지 / 10cm</label>
+                <div class="inline-pair">
+                  <input id="originalSts" type="number" inputmode="decimal" min="0" step="0.1" placeholder="코">
+                  <input id="originalRows" type="number" inputmode="decimal" min="0" step="0.1" placeholder="단">
+                </div>
+              </div>
+
+              <div>
+                <label>대체실 게이지 / 10cm</label>
+                <div class="inline-pair">
+                  <input id="subSts" type="number" inputmode="decimal" min="0" step="0.1" placeholder="코">
+                  <input id="subRows" type="number" inputmode="decimal" min="0" step="0.1" placeholder="단">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">
+              <h2>여유분</h2>
+              <span class="hint">재구매 어려운 실은 높게</span>
+            </div>
+
+            <div class="chips" id="marginChips">
+              <button class="chip" type="button" data-margin="10">10%</button>
+              <button class="chip active" type="button" data-margin="15">15%</button>
+              <button class="chip" type="button" data-margin="20">20%</button>
+              <button class="chip" type="button" data-margin="25">25%</button>
+              <button class="chip" type="button" data-margin="30">30%</button>
+            </div>
+
+            <div class="grid" style="margin-top:12px;">
+              <div class="field">
+                <label for="customMargin">직접 입력 %</label>
+                <input id="customMargin" type="number" inputmode="decimal" min="0" step="0.1" placeholder="칩 대신 직접 입력">
+              </div>
+              <div class="field">
+                <label for="roundMode">구매 단위 계산</label>
+                <select id="roundMode">
+                  <option value="ceil">100g 기준 올림</option>
+                  <option value="exact">100g 기준 개수만 표시</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="calculateBtn" type="button">계산하기</button>
+              <button class="secondary" id="sampleBtn" type="button">예시 넣기</button>
+              <button class="ghost" id="resetBtn" type="button">초기화</button>
+            </div>
+
+            <div id="errors" class="error-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel result-panel">
+        <div class="result-head">
+          <h2>계산 결과</h2>
+          <div class="main-number">
+            <div class="main-label">여유분 포함 필요량</div>
+            <div id="finalGrams" class="main-value">-</div>
+            <div id="finalSub" class="main-sub">값을 입력하고 계산해주세요.</div>
+          </div>
+        </div>
+
+        <div class="panel-inner">
+          <div class="cards">
+            <div class="stat">
+              <span>원작 총 사용 m</span>
+              <b id="originalTotalM">-</b>
+            </div>
+            <div class="stat">
+              <span>게이지 미반영 필요량</span>
+              <b id="baseSubG">-</b>
+            </div>
+            <div class="stat">
+              <span>가로 변화율</span>
+              <b id="widthFactor">-</b>
+            </div>
+            <div class="stat">
+              <span>세로 변화율</span>
+              <b id="heightFactor">-</b>
+            </div>
+            <div class="stat">
+              <span>면적 변화율</span>
+              <b id="areaFactor">-</b>
+            </div>
+            <div class="stat">
+              <span>게이지 반영 필요량</span>
+              <b id="gaugeSubG">-</b>
+            </div>
+            <div class="stat">
+              <span>구매 단위 <small class="label-note">(100g 기준)</small></span>
+              <b id="buyUnits">-</b>
+            </div>
+          </div>
+
+          <div id="message" class="notice">
+            원작과 대체실의 실 길이, 게이지를 입력하면 결과가 표시됩니다.
+          </div>
+
+          <div class="formula">
+            사용식<br>
+            원작 총 m = 원작 사용 g × 원작실 m/g<br>
+            같은 치수 기준 필요 m = 원작 총 m × √((대체실 코 × 대체실 단) ÷ (원작 코 × 원작 단))<br>
+            게이지 반영 g = 같은 치수 기준 필요 m ÷ 대체실 m/g<br>
+            여유분 포함 g = 게이지 반영 g × (1 + 여유분)<br>
+            구매 단위 = 여유분 포함 g ÷ 100g<br>
+            치수 변화율 = 원작 게이지 ÷ 대체실 게이지
+          </div>
+
+          <div class="actions" style="grid-template-columns:1fr; margin-top:12px;">
+            <button class="secondary" id="copyBtn" type="button">결과 복사</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <footer>
+      © 2026 Studio Y.Green. Website design and code. All rights reserved.
+    </footer>
+  </main>
+
+  <div id="toast" class="toast">복사되었습니다.</div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const ids = [
+      "originalUnitG", "originalUnitM", "originalUsage", "originalUsageUnit",
+      "subUnitG", "subUnitM", "originalSts", "originalRows",
+      "subSts", "subRows", "customMargin", "roundMode"
+    ];
+
+    const resultIds = [
+      "finalGrams", "finalSub", "originalTotalM", "baseSubG", "widthFactor",
+      "heightFactor", "areaFactor", "gaugeSubG", "buyUnits"
+    ];
+
+    let selectedMargin = 15;
+    let lastResultText = "";
+
+    function num(id) {
+      const value = parseFloat($(id).value);
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function fmt(value, digits = 1) {
+      if (!Number.isFinite(value)) return "-";
+      return value.toLocaleString("ko-KR", {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: value % 1 === 0 ? 0 : Math.min(digits, 1)
+      });
+    }
+
+    function pct(value) {
+      if (!Number.isFinite(value)) return "-";
+      return `${fmt(value * 100, 1)}%`;
+    }
+
+    function grams(value) {
+      if (!Number.isFinite(value)) return "-";
+      return `${fmt(value, 1)}g`;
+    }
+
+    function meters(value) {
+      if (!Number.isFinite(value)) return "-";
+      return `${fmt(value, 1)}m`;
+    }
+
+    function mpg(unitM, unitG) {
+      if (!unitM || !unitG || unitM <= 0 || unitG <= 0) return null;
+      return unitM / unitG;
+    }
+
+    function updateUnitNotes() {
+      const original = mpg(num("originalUnitM"), num("originalUnitG"));
+      const sub = mpg(num("subUnitM"), num("subUnitG"));
+
+      $("originalMpg").textContent = original
+        ? `원작실: 1g당 ${fmt(original, 3)}m / 100g당 ${fmt(original * 100, 1)}m`
+        : "원작실 1g당 m가 여기에 표시됩니다.";
+
+      $("subMpg").textContent = sub
+        ? `대체실: 1g당 ${fmt(sub, 3)}m / 100g당 ${fmt(sub * 100, 1)}m`
+        : "대체실 1g당 m가 여기에 표시됩니다.";
+    }
+
+    function setErrors(errors) {
+      const box = $("errors");
+      if (!errors.length) {
+        box.classList.remove("show");
+        box.innerHTML = "";
+        return;
+      }
+
+      box.classList.add("show");
+      box.innerHTML = errors.map((error) => `• ${error}`).join("<br>");
+    }
+
+    function getMargin() {
+      const custom = num("customMargin");
+      return custom !== null && custom >= 0 ? custom : selectedMargin;
+    }
+
+    function calculate() {
+      updateUnitNotes();
+
+      const originalUnitG = num("originalUnitG");
+      const originalUnitM = num("originalUnitM");
+      const originalUsage = num("originalUsage");
+      const usageUnit = $("originalUsageUnit").value;
+      const subUnitG = num("subUnitG");
+      const subUnitM = num("subUnitM");
+      const originalSts = num("originalSts");
+      const originalRows = num("originalRows");
+      const subSts = num("subSts");
+      const subRows = num("subRows");
+      const margin = getMargin();
+
+      const errors = [];
+
+      if (!originalUsage || originalUsage <= 0) errors.push("원작 사용량을 입력해주세요.");
+      if (usageUnit === "g" && (!originalUnitG || !originalUnitM || originalUnitG <= 0 || originalUnitM <= 0)) {
+        errors.push("원작 사용량을 g로 넣을 때는 원작실 단위 g/m가 필요합니다.");
+      }
+      if (!subUnitG || !subUnitM || subUnitG <= 0 || subUnitM <= 0) errors.push("대체실 단위 g/m를 입력해주세요.");
+      if (!originalSts || originalSts <= 0) errors.push("원작 게이지 코수를 입력해주세요.");
+      if (!originalRows || originalRows <= 0) errors.push("원작 게이지 단수를 입력해주세요.");
+      if (!subSts || subSts <= 0) errors.push("대체실 게이지 코수를 입력해주세요.");
+      if (!subRows || subRows <= 0) errors.push("대체실 게이지 단수를 입력해주세요.");
+      if (margin < 0) errors.push("여유분은 0 이상으로 입력해주세요.");
+
+      setErrors(errors);
+
+      if (errors.length) {
+        return null;
+      }
+
+      const originalMPerG = usageUnit === "g" ? originalUnitM / originalUnitG : null;
+      const subMPerG = subUnitM / subUnitG;
+
+      const originalTotalMeters = usageUnit === "g"
+        ? originalUsage * originalMPerG
+        : originalUsage;
+
+      const baseSubGrams = originalTotalMeters / subMPerG;
+      const width = originalSts / subSts;
+      const height = originalRows / subRows;
+      const area = width * height;
+
+      // 같은 완성 치수를 목표로 할 때의 대체실 필요 m 보정계수입니다.
+      // 굵은 실처럼 대체실 게이지 숫자가 원작보다 작으면 meterFactor도 1보다 작아집니다.
+      const meterFactor = Math.sqrt((subSts * subRows) / (originalSts * originalRows));
+      const gaugeAdjustedMeters = originalTotalMeters * meterFactor;
+      const gaugeSubGrams = gaugeAdjustedMeters / subMPerG;
+      const final = gaugeSubGrams * (1 + margin / 100);
+
+      const roundMode = $("roundMode").value;
+      const purchaseUnitG = 100;
+      const unitCount = roundMode === "ceil" ? Math.ceil(final / purchaseUnitG) : final / purchaseUnitG;
+      const buyGrams = roundMode === "ceil" ? unitCount * purchaseUnitG : final;
+      const buyMeters = buyGrams * subMPerG;
+
+      $("originalTotalM").textContent = meters(originalTotalMeters);
+      $("baseSubG").textContent = grams(baseSubGrams);
+      $("widthFactor").textContent = pct(width);
+      $("heightFactor").textContent = pct(height);
+      $("areaFactor").textContent = pct(area);
+      $("gaugeSubG").textContent = grams(gaugeSubGrams);
+      $("finalGrams").textContent = grams(final);
+
+      if (roundMode === "ceil") {
+        $("buyUnits").textContent = `${fmt(unitCount, 0)}개`;
+        $("finalSub").textContent = `게이지 반영 기준 · 100g 기준 ${fmt(unitCount, 0)}개 구매 → 약 ${grams(buyGrams)}, ${meters(buyMeters)}`;
+      } else {
+        $("buyUnits").textContent = `${fmt(unitCount, 2)}개분`;
+        $("finalSub").textContent = `게이지 반영 기준 · 100g 기준 개수만 표시했습니다.`;
+      }
+
+      const sizeMessage = [];
+      if (Math.abs(width - 1) >= 0.03) {
+        sizeMessage.push(width > 1
+          ? `같은 코수로 뜨면 가로가 원작보다 약 ${fmt((width - 1) * 100, 1)}% 커집니다.`
+          : `같은 코수로 뜨면 가로가 원작보다 약 ${fmt((1 - width) * 100, 1)}% 작아집니다.`);
+      }
+      if (Math.abs(height - 1) >= 0.03) {
+        sizeMessage.push(height > 1
+          ? `같은 단수로 뜨면 세로가 원작보다 약 ${fmt((height - 1) * 100, 1)}% 길어집니다.`
+          : `같은 단수로 뜨면 세로가 원작보다 약 ${fmt((1 - height) * 100, 1)}% 짧아집니다.`);
+      }
+
+      if (!sizeMessage.length) {
+        sizeMessage.push("원작 게이지와 대체실 게이지 차이가 작습니다.");
+      }
+
+      if (Math.abs(area - 1) >= 0.2) {
+        $("message").className = "notice warn";
+        sizeMessage.push("굵은 실 기준으로 같은 완성 치수를 맞추면 필요 m는 줄어드는 방향으로 계산됩니다. 다만 대체실 100g당 m가 짧으면 최종 g은 크게 줄지 않을 수 있습니다.");
+      } else {
+        $("message").className = "notice";
+      }
+
+      $("message").textContent = sizeMessage.join(" ");
+
+      lastResultText =
+`대체실 소요량 계산 결과
+- 원작 총 사용량: ${meters(originalTotalMeters)}
+- 대체실 기본 필요량: ${grams(baseSubGrams)}
+- 가로 변화율: ${pct(width)}
+- 세로 변화율: ${pct(height)}
+- 같은 치수 기준 필요 m 보정계수: ${pct(meterFactor)}
+- 같은 코수·단수 기준 면적 변화율: ${pct(area)}
+- 게이지 반영 필요량: ${grams(gaugeSubGrams)}
+- 여유분 ${fmt(margin, 1)}% 포함: ${grams(final)}
+- 구매 단위: 게이지 반영 기준 · 100g 기준 ${roundMode === "ceil" ? `${fmt(unitCount, 0)}개 / 약 ${grams(buyGrams)} / ${meters(buyMeters)}` : `${fmt(unitCount, 2)}개분`}`;
+
+      saveState();
+      return {
+        originalTotalMeters, baseSubGrams, width, height, area,
+        gaugeSubGrams, final, unitCount, buyGrams, buyMeters
+      };
+    }
+
+    function resetResults() {
+      resultIds.forEach((id) => {
+        $(id).textContent = "-";
+      });
+      $("finalSub").textContent = "값을 입력하고 계산해주세요.";
+      $("message").className = "notice";
+      $("message").textContent = "원작과 대체실의 실 길이, 게이지를 입력하면 결과가 표시됩니다.";
+      lastResultText = "";
+    }
+
+    function saveState() {
+      const state = {};
+      ids.forEach((id) => state[id] = $(id).value);
+      state.selectedMargin = selectedMargin;
+      localStorage.setItem("substituteYarnCalculator", JSON.stringify(state));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem("substituteYarnCalculator");
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        ids.forEach((id) => {
+          if (state[id] !== undefined) $(id).value = state[id];
+        });
+        if (state.selectedMargin !== undefined) {
+          selectedMargin = Number(state.selectedMargin);
+          document.querySelectorAll(".chip").forEach((chip) => {
+            chip.classList.toggle("active", Number(chip.dataset.margin) === selectedMargin);
+          });
+        }
+      } catch {
+        localStorage.removeItem("substituteYarnCalculator");
+      }
+    }
+
+    function showToast(text) {
+      const toast = $("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        selectedMargin = Number(chip.dataset.margin);
+        $("customMargin").value = "";
+        document.querySelectorAll(".chip").forEach((item) => item.classList.remove("active"));
+        chip.classList.add("active");
+        saveState();
+      });
+    });
+
+    ids.forEach((id) => {
+      $(id).addEventListener("input", () => {
+        updateUnitNotes();
+        saveState();
+      });
+      $(id).addEventListener("change", () => {
+        updateUnitNotes();
+        saveState();
+      });
+    });
+
+    $("calculateBtn").addEventListener("click", calculate);
+
+    $("sampleBtn").addEventListener("click", () => {
+      $("originalUnitG").value = "100";
+      $("originalUnitM").value = "300";
+      $("originalUsage").value = "500";
+      $("originalUsageUnit").value = "g";
+      $("subUnitG").value = "100";
+      $("subUnitM").value = "450";
+      $("originalSts").value = "25";
+      $("originalRows").value = "34";
+      $("subSts").value = "23";
+      $("subRows").value = "32";
+      $("customMargin").value = "";
+      $("roundMode").value = "ceil";
+      selectedMargin = 15;
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.classList.toggle("active", Number(chip.dataset.margin) === selectedMargin);
+      });
+      updateUnitNotes();
+      calculate();
+      showToast("예시값을 넣었습니다.");
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      ids.forEach((id) => $(id).value = "");
+      $("originalUsageUnit").value = "g";
+      $("roundMode").value = "ceil";
+      selectedMargin = 15;
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.classList.toggle("active", Number(chip.dataset.margin) === selectedMargin);
+      });
+      localStorage.removeItem("substituteYarnCalculator");
+      updateUnitNotes();
+      setErrors([]);
+      resetResults();
+      showToast("초기화했습니다.");
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      if (!lastResultText) {
+        const result = calculate();
+        if (!result) return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(lastResultText);
+        showToast("결과를 복사했습니다.");
+      } catch {
+        const temp = document.createElement("textarea");
+        temp.value = lastResultText;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+        showToast("결과를 복사했습니다.");
+      }
+    });
+
+    loadState();
+    updateUnitNotes();
+  </script>
+</body>
+</html>
