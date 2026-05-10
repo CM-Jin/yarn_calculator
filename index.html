@@ -406,6 +406,28 @@
       transform: translateX(-50%) translateY(0);
     }
 
+
+    .install-wrap {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .install-wrap.show {
+      display: flex;
+    }
+
+    .install-button {
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--accent-dark);
+      color: #fff;
+      border: 0;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
     footer {
       margin: 24px 4px 0;
       padding: 18px 4px 0;
@@ -481,6 +503,15 @@
       }
     }
   </style>
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#6d4c41">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="대체실 계산기">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body>
   <main class="app">
@@ -491,6 +522,9 @@
         원작 사용량과 대체실 길이, 게이지 차이를 함께 반영해 대체실 필요량을 계산합니다.
       </p>
       <div class="top-warning">*본인의 손땀에 따라 실제 소요량은 달라질 수 있습니다.</div>
+      <div id="installWrap" class="install-wrap">
+        <button id="installBtn" class="install-button" type="button">앱처럼 설치하기</button>
+      </div>
     </header>
 
     <div class="layout">
@@ -1015,6 +1049,35 @@
 
     loadState();
     updateUnitNotes();
+
+    let deferredInstallPrompt = null;
+    const installWrap = document.getElementById("installWrap");
+    const installBtn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      if (installWrap) installWrap.classList.add("show");
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) {
+          showToast("브라우저 메뉴에서 홈 화면에 추가를 선택해주세요.");
+          return;
+        }
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        if (installWrap) installWrap.classList.remove("show");
+      });
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
